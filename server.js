@@ -12,13 +12,17 @@ const mongo_url = process.env.MONGODB_URL;
 const mongo_user = process.env.MONGODB_USER;
 const mongo_password = process.env.MONGODB_PASSWORD;
 
-const url = `mongodb+srv://${mongo_user}:${mongo_password}@${mongo_url}/contactdata?retryWrites=true&w=majority`
-//console.log(url);
+const url = `mongodb+srv://${mongo_user}:${mongo_password}@${mongo_url}/contactdata?retryWrites=true&w=majority`;
 
-mongoose.connect(url).then(
-    () => console.log("Connected to MongoDB"),
-    (error) => console.log("Failed to connect to MongoDB. Reason",error)
-)
+const connectDB = async () => {
+    try{
+        const conn = await mongoose.connect(url);
+        console.log("Connected to MongoDB on: "+conn.connection.host);
+    } catch (error){
+        console.log(error);
+        process.exit(1);
+    }
+}
 
 app.get("/api/contact",function(req,res){
     contactModel.find().then(function(contact){
@@ -80,6 +84,8 @@ app.put("/api/contact/:id", function(req,res){
     })
 })
 
-app.listen(port)
-
-console.log("Running in port " + port);
+connectDB().then(() => {
+    app.listen(port, () => {
+        console.log("Server running in port "+port)
+    })
+})
